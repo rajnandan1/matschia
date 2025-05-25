@@ -2,8 +2,6 @@
 
 Matschia is a modern web application that analyzes Twitter/X posts, identifies technology-related content, and generates engaging replies in the style of popular tech influencers. It features a clean, shadcn-inspired UI built with Tailwind CSS.
 
-![Matschia Logo](/static/logo.png)
-
 ## Features
 
 ### Core Functionality
