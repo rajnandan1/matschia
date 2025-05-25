@@ -6,7 +6,7 @@ Matschia is a modern web application that analyzes Twitter/X posts, identifies t
 
 ![Matschia Twitter Engagement Tool](static/ssm.png)
 
-*Screenshot of Matschia analyzing and generating content for Twitter/X engagement*
+_Screenshot of Matschia analyzing and generating content for Twitter/X engagement_
 
 ## Features
 
