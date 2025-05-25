@@ -1,0 +1,109 @@
+{% extends "base.html" %} {% block title %}Matschia - Confirmation{% endblock %}
+{% block content %}
+<div class="flex justify-center">
+    <div class="w-full max-w-2xl">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="p-8 text-center">
+                <div class="mb-6">
+                    {% if success %}
+                    <div class="flex justify-center mb-4">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="64"
+                            height="64"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="#43936c"
+                            class="text-green-600"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-3">
+                        Reply Posted Successfully!
+                    </h2>
+                    <p class="text-lg text-gray-600">
+                        Your reply has been posted to Twitter/X.
+                    </p>
+                    {% else %}
+                    <div class="flex justify-center mb-4">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="64"
+                            height="64"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-3">
+                        Failed to Post Reply
+                    </h2>
+                    <p class="text-lg text-gray-600">
+                        There was an issue posting your reply to Twitter/X.
+                    </p>
+                    {% endif %}
+                </div>
+
+                <div
+                    class="mb-8 p-5 bg-gray-50 rounded-lg border border-gray-200 text-left"
+                >
+                    <h3 class="text-base font-semibold mb-3">Original Tweet</h3>
+                    <p class="text-gray-800 mb-5">
+                        {{ results.best_tweet.post }}
+                    </p>
+
+                    <h3 class="text-base font-semibold mb-3">Your Reply</h3>
+                    <p class="bg-white p-3 rounded border border-gray-200">
+                        {{ results.generated_reply.text }}
+                    </p>
+                </div>
+
+                <div class="flex justify-center space-x-4">
+                    <a
+                        href="{{ url_for('index') }}"
+                        class="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    >
+                        Back to Home
+                    </a>
+                    <a
+                        href="{{ results.best_tweet.url }}"
+                        target="_blank"
+                        class="inline-flex items-center px-4 py-2 border border-transparent font-medium rounded-md shadow-sm bg-buttonBg text-buttonText hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-buttonText"
+                    >
+                        View on Twitter/X
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            class="ml-1"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                            />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

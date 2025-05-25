@@ -1,0 +1,106 @@
+{% extends "base.html" %} {% block title %}Matschia - Home{% endblock %} {%
+block content %}
+<div class="flex justify-center">
+    <div class="w-full max-w-2xl">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="p-8 text-center">
+                <h1 class="text-3xl font-bold mb-4">Matschia</h1>
+                <p class="text-lg opacity-75 mb-8">
+                    This tool analyzes tweets from your timeline, finds the most
+                    engaging tech-related tweet, and generates a human-like
+                    reply.
+                </p>
+
+                <div class="step-indicator flex justify-between mb-8">
+                    <div class="step active flex flex-col items-center flex-1">
+                        <div class="step-number">1</div>
+                        <div class="step-title mt-2">Fetch Tweets</div>
+                    </div>
+                    <div class="step flex flex-col items-center flex-1">
+                        <div class="step-number">2</div>
+                        <div class="step-title mt-2">Analyze</div>
+                    </div>
+                    <div class="step flex flex-col items-center flex-1">
+                        <div class="step-number">3</div>
+                        <div class="step-title mt-2">Reply</div>
+                    </div>
+                </div>
+
+                <form
+                    action="{{ url_for('fetch_tweets') }}"
+                    method="post"
+                    class="mt-8"
+                >
+                    <div class="mb-6">
+                        <label
+                            for="scrollCount"
+                            class="block text-sm font-medium mb-2"
+                            >How many tweets would you like to fetch?</label
+                        >
+                        <div class="flex justify-center">
+                            <div class="w-full max-w-xs">
+                                <div class="flex rounded-md shadow-sm">
+                                    <span
+                                        class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm"
+                                    >
+                                        Number of scrolls
+                                    </span>
+                                    <input
+                                        type="number"
+                                        class="focus:ring-buttonBg focus:border-buttonBg flex-1 block w-full rounded-none rounded-r-md sm:text-sm border border-gray-300 py-2 px-3"
+                                        id="scrollCount"
+                                        name="scroll_count"
+                                        min="1"
+                                        max="10"
+                                        value="3"
+                                        required
+                                    />
+                                </div>
+                                <p class="mt-2 text-sm text-gray-500">
+                                    More scrolls = more tweets, but takes longer
+                                    to fetch. Recommended: 3-5 scrolls.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8">
+                        <button
+                            type="submit"
+                            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm bg-buttonBg text-buttonText hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-buttonText"
+                        >
+                            <span>Fetch Tweets</span>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                class="ml-2"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                                ></path>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+
+                <div
+                    class="mt-8 px-6 py-4 bg-white bg-opacity-50 rounded-lg border border-gray-200"
+                >
+                    <p class="text-sm text-gray-600">
+                        <span class="font-semibold">Note:</span> The first time
+                        you run this tool, you'll need to log in to Twitter/X in
+                        the browser window that opens.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

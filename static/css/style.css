@@ -1,0 +1,188 @@
+/* filepath: /Users/rajnandan1/Code/cman2/static/css/style.css */
+
+/* Custom styles for Matschia - complementing Tailwind CSS */
+
+/* These styles will be applied on top of Tailwind classes */
+
+/* Custom scrollbar for tweet containers */
+.tweets-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tweets-container::-webkit-scrollbar-track {
+    background-color: #f8f0ea;
+    border-radius: 8px;
+}
+
+.tweets-container::-webkit-scrollbar-thumb {
+    background-color: #453b51;
+    border-radius: 8px;
+}
+
+/* Step indicator custom styling */
+.step-indicator {
+    position: relative;
+}
+
+.step-indicator::before {
+    content: "";
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #e7d2c5;
+    z-index: 0;
+}
+
+.step {
+    position: relative;
+    z-index: 1;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    background-color: #e7d2c5;
+    color: #1c1716;
+}
+
+.step.active .step-number {
+    background-color: #453b51;
+    color: #f33f66;
+}
+
+.step.completed .step-number {
+    background-color: #43936c;
+    color: #ffffff;
+}
+
+/* Score visualization */
+.score-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e7d2c5;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.score-fill {
+    height: 100%;
+    background-color: #453b51;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f33f66;
+    font-size: 0;
+    transition: width 0.5s ease;
+}
+
+.score-fill:hover {
+    font-size: 12px;
+}
+
+/* Tweet and reply cards */
+.tweet-card {
+    border: 1px solid #e7d2c5;
+    transition: all 0.2s ease;
+}
+
+.tweet-card:hover {
+    border-color: #453b51;
+}
+
+.tweet-card.highlight {
+    border: 1px solid #453b51;
+    box-shadow: 0 4px 12px rgba(69, 59, 81, 0.1);
+}
+
+/* Button focus states */
+button:focus,
+a:focus {
+    outline: 2px solid #f33f66;
+    outline-offset: 2px;
+}
+
+/* Badge styling */
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge-tech {
+    background-color: #453b5120;
+    color: #453b51;
+}
+
+/* Custom checkbox styling */
+.custom-checkbox {
+    position: relative;
+    padding-left: 28px;
+    cursor: pointer;
+    font-size: 1rem;
+    user-select: none;
+}
+
+.custom-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.custom-checkbox .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background-color: #e7d2c5;
+    border-radius: 4px;
+}
+
+.custom-checkbox:hover input ~ .checkmark {
+    background-color: #d8c3b6;
+}
+
+.custom-checkbox input:checked ~ .checkmark {
+    background-color: #453b51;
+}
+
+.custom-checkbox .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.custom-checkbox input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.custom-checkbox .checkmark:after {
+    left: 7px;
+    top: 3px;
+    width: 6px;
+    height: 12px;
+    border: solid #f33f66;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Transitions */
+.transition-all {
+    transition: all 0.2s ease;
+}
+
+/* Custom Focus Styles */
+.ring-button:focus {
+    box-shadow: 0 0 0 3px rgba(243, 63, 102, 0.5);
+}

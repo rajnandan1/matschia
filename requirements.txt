@@ -1,0 +1,7 @@
+openai-agents
+python-dotenv
+playwright
+pydantic
+flask
+flask-bootstrap
+flask-wtf
