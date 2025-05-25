@@ -79,39 +79,153 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Handle confirmation dialog for posting replies
-    const confirmForm = document.getElementById("confirmForm");
-    if (confirmForm) {
-        confirmForm.addEventListener("submit", function (event) {
+    // Handle new post editing functionality
+    const editPostBtn = document.getElementById("editPostBtn");
+    const postTextDisplay = document.getElementById("postTextDisplay");
+    const postTextEditor = document.getElementById("postTextEditor");
+    const postEditorControls = document.getElementById("postEditorControls");
+    const cancelPostEditBtn = document.getElementById("cancelPostEditBtn");
+    const savePostEditBtn = document.getElementById("savePostEditBtn");
+    const editedPostInput = document.getElementById("editedPostInput");
+
+    if (
+        editPostBtn &&
+        postTextDisplay &&
+        postTextEditor &&
+        postEditorControls
+    ) {
+        // Show editor when edit button is clicked
+        editPostBtn.addEventListener("click", function () {
+            postTextDisplay.classList.add("hidden");
+            postTextEditor.classList.remove("hidden");
+            postEditorControls.classList.remove("hidden");
+            editPostBtn.classList.add("hidden");
+
+            // Focus on the editor
+            postTextEditor.focus();
+        });
+
+        // Hide editor when cancel button is clicked
+        if (cancelPostEditBtn) {
+            cancelPostEditBtn.addEventListener("click", function () {
+                postTextEditor.value = postTextDisplay.textContent.trim();
+                postTextDisplay.classList.remove("hidden");
+                postTextEditor.classList.add("hidden");
+                postEditorControls.classList.add("hidden");
+                editPostBtn.classList.remove("hidden");
+            });
+        }
+
+        // Save edited text when save button is clicked
+        if (savePostEditBtn && editedPostInput) {
+            savePostEditBtn.addEventListener("click", function () {
+                const editedText = postTextEditor.value.trim();
+                postTextDisplay.textContent = editedText;
+                editedPostInput.value = editedText;
+
+                postTextDisplay.classList.remove("hidden");
+                postTextEditor.classList.add("hidden");
+                postEditorControls.classList.add("hidden");
+                editPostBtn.classList.remove("hidden");
+            });
+        }
+    }
+
+    // Handle tabs for reply vs new post
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    const tabContents = document.querySelectorAll(".tab-content");
+
+    if (tabBtns.length && tabContents.length) {
+        tabBtns.forEach((btn) => {
+            btn.addEventListener("click", function () {
+                // Remove active class from all buttons
+                tabBtns.forEach((b) => {
+                    b.classList.remove(
+                        "active",
+                        "border-buttonBg",
+                        "text-buttonBg"
+                    );
+                    b.classList.add("border-transparent", "text-gray-500");
+                });
+
+                // Add active class to clicked button
+                this.classList.add(
+                    "active",
+                    "border-buttonBg",
+                    "text-buttonBg"
+                );
+                this.classList.remove("border-transparent", "text-gray-500");
+
+                // Hide all tab contents
+                tabContents.forEach((content) => {
+                    content.classList.add("hidden");
+                    content.classList.remove("block");
+                });
+
+                // Show target content
+                const targetId = this.getAttribute("data-target");
+                document.getElementById(targetId).classList.remove("hidden");
+                document.getElementById(targetId).classList.add("block");
+            });
+        });
+    }
+
+    // Handle reply form validation
+    const replyForm = document.getElementById("replyForm");
+    if (replyForm) {
+        replyForm.addEventListener("submit", function (event) {
             const confirmValue = event.submitter.value;
             // Only validate checkbox if user is posting the reply (yes button)
             if (
                 confirmValue === "yes" &&
-                !document.getElementById("confirmCheckbox").checked
+                !document.getElementById("replyConfirmCheckbox").checked
             ) {
                 event.preventDefault();
-
-                // Create a more stylish notification instead of using alert
-                const notification = document.createElement("div");
-                notification.className =
-                    "fixed top-4 right-4 bg-red-50 text-red-700 px-4 py-3 rounded-md shadow-md border border-red-200 flex items-center space-x-2 z-50";
-                notification.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                    <span>Please confirm that you want to post this reply</span>
-                `;
-
-                document.body.appendChild(notification);
-
-                // Remove the notification after 3 seconds
-                setTimeout(() => {
-                    notification.classList.add("opacity-0");
-                    notification.style.transition = "opacity 0.5s ease";
-                    setTimeout(() => notification.remove(), 500);
-                }, 3000);
+                showNotification(
+                    "Please confirm that you want to post this reply"
+                );
             }
         });
+    }
+
+    // Handle post form validation
+    const postForm = document.getElementById("postForm");
+    if (postForm) {
+        postForm.addEventListener("submit", function (event) {
+            const confirmValue = event.submitter.value;
+            // Only validate checkbox if user is creating the post (yes button)
+            if (
+                confirmValue === "yes" &&
+                !document.getElementById("postConfirmCheckbox").checked
+            ) {
+                event.preventDefault();
+                showNotification(
+                    "Please confirm that you want to create this new post"
+                );
+            }
+        });
+    }
+
+    // Function to show notifications
+    function showNotification(message) {
+        const notification = document.createElement("div");
+        notification.className =
+            "fixed top-4 right-4 bg-red-50 text-red-700 px-4 py-3 rounded-md shadow-md border border-red-200 flex items-center space-x-2 z-50";
+        notification.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            <span>${message}</span>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Remove the notification after 3 seconds
+        setTimeout(() => {
+            notification.classList.add("opacity-0");
+            notification.style.transition = "opacity 0.5s ease";
+            setTimeout(() => notification.remove(), 500);
+        }, 3000);
     }
 
     // Handle copy to clipboard functionality for the generated reply

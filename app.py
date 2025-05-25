@@ -15,7 +15,7 @@ from werkzeug.utils import secure_filename
 # Import modules for Twitter analysis
 from twitter_wrapper import fetch_tweets_async
 from twitter_analyzer import TwitterAnalyzer, TweetData
-from tweet_poster import post_reply_async
+from tweet_poster import post_reply_async, post_tweet_async
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, 
@@ -128,6 +128,9 @@ async def _analyze_tweets():
     # Generate reply
     tweet_reply = await twitter_analyzer.generate_reply(best_tweet)
     
+    # Generate a new standalone post
+    new_post = await twitter_analyzer.generate_new_post(tech_tweets)
+    
     # Create results dictionary
     results = {
         "best_tweet": {
@@ -142,6 +145,12 @@ async def _analyze_tweets():
             "tone": tweet_reply.tone,
             "style": tweet_reply.humor_style if hasattr(tweet_reply, 'humor_style') else "",
             "reasoning": tweet_reply.reasoning
+        },
+        "generated_post": {
+            "text": new_post.reply_text,
+            "tone": new_post.tone,
+            "style": new_post.humor_style if hasattr(new_post, 'humor_style') else "",
+            "reasoning": new_post.reasoning
         },
         "analysis_summary": {
             "total_tweets": len(tweets),
@@ -193,6 +202,43 @@ def confirm_reply():
     else:
         # User clicked "No, Cancel" - go back to home page
         flash('Reply cancelled. Starting over.', 'info')
+        return redirect(url_for('restart'))
+
+@app.route('/create_post', methods=['POST'])
+def create_post():
+    """Create and post a new standalone tweet to Twitter"""
+    if 'analysis_results' not in session:
+        flash('No analysis results found. Please analyze tweets first.', 'error')
+        return redirect(url_for('index'))
+    
+    # Get analysis results from session
+    results = session['analysis_results']
+    
+    if request.form.get('confirm') == 'yes':
+        try:
+            # Get the edited post text if available, otherwise use the original
+            post_text = request.form.get('edited_post', results['generated_post']['text'])
+            
+            # Update the post text in session for display on confirmation
+            results['generated_post']['text'] = post_text
+            session['analysis_results'] = results
+            
+            # Post the tweet asynchronously
+            success = asyncio.run(post_tweet_async(post_text))
+            
+            if success:
+                flash('Tweet posted successfully!', 'success')
+                return render_template('confirm.html', success=True, results=results, is_post=True)
+            else:
+                flash('Failed to post tweet.', 'error')
+                return render_template('confirm.html', success=False, results=results, is_post=True)
+        except Exception as e:
+            logger.error(f"Error posting tweet: {str(e)}")
+            flash(f'Error posting tweet: {str(e)}', 'error')
+            return render_template('confirm.html', success=False, results=results, is_post=True)
+    else:
+        # User clicked "No, Cancel" - go back to home page
+        flash('Tweet creation cancelled. Starting over.', 'info')
         return redirect(url_for('restart'))
 
 @app.route('/restart')

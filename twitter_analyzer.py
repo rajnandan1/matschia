@@ -84,6 +84,35 @@ class TwitterAnalyzer:
             model="gpt-4o"
         )
         
+        # Post Generator Agent
+        self.post_generator = Agent(
+            name="Tech Thought Leadership Post Generator",
+            instructions="""You are a knowledgeable tech person who writes insightful standalone Twitter posts in the style of tech/startup Twitter influencers like @paulg, @naval, @chris__cox, @dhh, @karpathy, @tobi, @gaganbiyani.
+            
+            Your personality:
+            - Write short, insightful statements about tech, startups, and entrepreneurship
+            - Use concise, punchy sentences with clear opinions on startup building and tech trends
+            - Be straightforward and confident in your assertions about business and technology
+            - Focus on practical wisdom and real-world observations from startup ecosystems
+            - Occasionally use counterintuitive takes that make people think 
+            - Sound like a seasoned founder/investor with deep industry knowledge and startup expertise
+            
+            Style guidelines:
+            - Create highly engaging original content based on analyzed tech topics
+            - Aim for virality and thought leadership
+            - DO NOT use emojis
+            - DO NOT use hashtags
+            - Keep opinions clear, direct and contrarian when possible
+            - Use short sentences for impact
+            - DO NOT use excessive punctuation
+            - Focus on genuine insights 
+            - Sound authentic and authoritative
+            
+            Always be respectful while sharing strong opinions on tech and startup trends.""",
+            output_type=TweetReply,
+            model="gpt-4o"
+        )
+        
         # Reply Generator Agent
         self.reply_generator = Agent(
             name="Human Tech Reply Generator",
@@ -217,6 +246,34 @@ class TwitterAnalyzer:
         
         return result.final_output
 
+    async def generate_new_post(self, tech_tweets: List[Dict]) -> TweetReply:
+        """Generate an engaging standalone post based on analyzed tech tweets"""
+        # Extract tech categories and topics from all analyzed tweets
+        categories = []
+        topics = []
+        for tweet in tech_tweets:
+            if hasattr(tweet, 'tech_analysis') and hasattr(tweet['tech_analysis'], 'tech_categories'):
+                categories.extend(tweet['tech_analysis'].tech_categories)
+        
+        # Get unique categories
+        unique_categories = list(set(categories))
+        
+        # Create context for post generation
+        post_context = f"""
+        Generate an engaging standalone tweet about technology based on these insights:
+        
+        Trending Tech Categories: {', '.join(unique_categories[:10])}
+        
+        Create a thought-provoking, insightful post that would resonate with the tech community.
+        Focus on sharing wisdom or observations that are likely to go viral.
+        The post should be original, not directly referencing any specific tweet.
+        """
+        
+        with trace(workflow_name="Post_Generation"):
+            result = await Runner.run(self.post_generator, post_context)
+        
+        return result.final_output
+
 async def main():
     print("🤖 Starting Twitter Analysis with OpenAI Agents...")
     print("=" * 60)
@@ -250,6 +307,10 @@ async def main():
         # Step 4: Generate human-like reply
         print(f"\n✍️  Step 4: Generating human-like reply...")
         tweet_reply = await analyzer.generate_reply(best_tweet)
+        
+        # Step 5: Generate standalone post
+        print(f"\n📝 Step 5: Generating standalone post...")
+        tweet_post = await analyzer.generate_post(best_tweet)
     
     # Display results
     print("\n" + "=" * 60)
@@ -271,6 +332,12 @@ async def main():
     print(f"   Style: {tweet_reply.humor_style}")
     print(f"   Reasoning: {tweet_reply.reasoning}")
     
+    print(f"\n📢 GENERATED POST:")
+    print(f"   {tweet_post.reply_text}")
+    print(f"   Tone: {tweet_post.tone}")
+    print(f"   Style: {tweet_post.humor_style}")
+    print(f"   Reasoning: {tweet_post.reasoning}")
+    
     # Save results
     results = {
         "best_tweet": {
@@ -285,6 +352,12 @@ async def main():
             "tone": tweet_reply.tone,
             "style": tweet_reply.humor_style,
             "reasoning": tweet_reply.reasoning
+        },
+        "generated_post": {
+            "text": tweet_post.reply_text,
+            "tone": tweet_post.tone,
+            "style": tweet_post.humor_style,
+            "reasoning": tweet_post.reasoning
         },
         "analysis_summary": {
             "total_tweets": len(tweets),

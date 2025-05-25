@@ -1,6 +1,6 @@
-# Matschia - Twitter Reply Tool
+# Matschia - Twitter Engagement Tool
 
-Matschia is a modern web application that analyzes Twitter/X posts, identifies technology-related content, and generates engaging replies in the style of popular tech influencers. It features a clean, shadcn-inspired UI built with Tailwind CSS.
+Matschia is a modern web application that analyzes Twitter/X posts, identifies technology-related content, and generates engaging content (replies or standalone posts) in the style of popular tech influencers. It features a clean, shadcn-inspired UI built with Tailwind CSS.
 
 ## Features
 
@@ -9,9 +9,10 @@ Matschia is a modern web application that analyzes Twitter/X posts, identifies t
 -   **Automated Tweet Collection**: Scrapes your Twitter/X timeline using Playwright
 -   **Smart Content Analysis**: Uses OpenAI to classify tweets for tech relevance
 -   **Engagement Scoring**: Identifies the most engaging tech-related tweets
--   **AI-Powered Reply Generation**: Creates replies in the style of tech influencers like @paulg, @naval, @dhh, and others
--   **Reply Editing**: Edit suggested replies before posting
--   **Direct Posting**: Optionally post replies directly to Twitter/X
+-   **AI-Powered Content Generation**: Creates replies and standalone posts in the style of tech influencers like @paulg, @naval, @dhh, and others
+-   **Content Editing**: Edit suggested replies and posts before publishing
+-   **Direct Posting**: Optionally post replies or standalone tweets directly to Twitter/X
+-   **Flexible Engagement**: Choose between replying to tweets or creating new standalone posts
 
 ### UI/UX Features
 
@@ -79,9 +80,9 @@ Matschia is a modern web application that analyzes Twitter/X posts, identifies t
 2. **Navigate the Web Interface**
     - Enter the number of timeline scrolls (1-10) to determine how many tweets to fetch
     - Follow the step-by-step process through the UI
-    - View analysis results and the suggested reply
-    - Edit the reply if desired
-    - Confirm to post the reply or cancel to start over
+    - View analysis results and choose between posting a reply or creating a new standalone post
+    - Edit the generated content if desired
+    - Confirm to publish your content or cancel to start over
 
 ### Command-Line Usage (Alternative)
 
@@ -98,7 +99,7 @@ This will:
 3. Automatically collect tweets from your timeline
 4. Analyze the collected tweets for tech relevance
 5. Select the most engaging tech tweet
-6. Generate a witty reply in the style of tech influencers
+6. Generate a witty reply and a standalone post in the style of tech influencers
 7. Save results to `analysis_results.json`
 
 ## Project Structure
@@ -108,7 +109,7 @@ This will:
 -   `app.py`: Main Flask web application
 -   `tweet_scraper.py`: Handles Twitter scraping with Playwright
 -   `twitter_wrapper.py`: API wrapper for Twitter interactions
--   `tweet_poster.py`: Posts replies to Twitter
+-   `tweet_poster.py`: Posts replies and standalone tweets to Twitter
 -   `twitter_analyzer.py`: Analyzes tweets with AI models
 -   `run_webapp.sh`: Script to run the web application
 -   `run_twitter_analysis.sh`: Script for standalone analysis
@@ -132,7 +133,8 @@ You can customize the analysis by editing `twitter_analyzer.py`:
 
 -   **Tech Classification**: Update the topics considered technology-related
 -   **Engagement Scoring**: Adjust factors that determine engagement potential
--   **Reply Tone**: Modify the style of generated replies
+-   **Content Style**: Modify the style of generated replies and posts
+-   **Post Generator**: Configure the standalone post creation parameters
 
 ### Theming
 
@@ -179,10 +181,11 @@ python3 twitter_wrapper.py
 -   Try increasing the scroll count to fetch more tweets
 -   Check that your Twitter timeline includes technology-related content
 
-**Q: Reply generation fails**
+**Q: Content generation fails**
 
 -   Verify your OpenAI API key is valid and has sufficient credits
 -   Check the .env file is properly formatted
+-   If only post creation fails but replies work, check Twitter/X posting permissions
 
 ## License
 

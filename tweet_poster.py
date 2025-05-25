@@ -138,9 +138,130 @@ async def post_reply_async(tweet_url, reply_text):
                 pass
             return False
 
+async def post_tweet_async(tweet_text):
+    """Post a standalone tweet with the given text"""
+    logger.info(f"Preparing to post a new tweet")
+    logger.info(f"Tweet text: {tweet_text}")
+    
+    async with async_playwright() as p:
+        try:
+            browser = await p.chromium.launch(
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--no-sandbox",
+                    "--disable-infobars",
+                    "--disable-extensions",
+                    "--start-maximized",
+                ],
+                headless=False,  # Ensure the browser is visible
+            )
+            
+            # Set up context options
+            context_options = {
+                "viewport": {"width": 1512, "height": 982},
+                "device_scale_factor": 2,
+            }
+            
+            # Load session state if it exists
+            if STORAGE_STATE_PATH.exists():
+                context_options["storage_state"] = str(STORAGE_STATE_PATH)
+                logger.info(f"Loading session state from {STORAGE_STATE_PATH}")
+            else:
+                logger.error(f"No session state file found at {STORAGE_STATE_PATH}")
+                await browser.close()
+                return False
+            
+            context = await browser.new_context(**context_options)
+            page = await context.new_page()
+            
+            # Go to Twitter home
+            logger.info(f"Navigating to Twitter/X home page")
+            await page.goto("https://x.com/home")
+            
+            # Wait for the timeline to load
+            logger.info("Waiting for timeline to load...")
+            await page.wait_for_selector('div[aria-label="Timeline: Your Home Timeline"]')
+            
+            # Click on the tweet input field
+            logger.info("Clicking on tweet input field...")
+            tweet_input = await page.query_selector('[data-testid="tweetTextarea_0"]')
+            if not tweet_input:
+                logger.error("Couldn't find tweet input field")
+                await browser.close()
+                return False
+                
+            await tweet_input.click()
+            
+            # Type the tweet
+            logger.info(f"Typing tweet: {tweet_text}")
+            await page.fill('[data-testid="tweetTextarea_0"]', tweet_text)
+            
+            # Wait a moment before clicking tweet button
+            await page.wait_for_timeout(1000)
+            
+            # Click the tweet button to submit
+            logger.info("Submitting tweet...")
+            tweet_button = await page.query_selector('[data-testid="tweetButtonInline"]')
+            if not tweet_button:
+                logger.error("Couldn't find tweet button")
+                await browser.close()
+                return False
+                
+            await tweet_button.click()
+            
+            # Wait for tweet to be posted
+            logger.info("Waiting for tweet to be posted...")
+            try:
+                # Wait for some confirmation element or timeout
+                await page.wait_for_timeout(5000)
+                
+                # Check if we're back on the timeline (indicating success)
+                is_back_on_timeline = await page.evaluate('''() => {
+                    return document.querySelector('[aria-label="Timeline: Your Home Timeline"]') !== null;
+                }''')
+                
+                if is_back_on_timeline:
+                    logger.info("Tweet successfully posted!")
+                else:
+                    logger.warning("Unable to confirm if tweet was posted.")
+            except Exception as e:
+                logger.error(f"Error waiting for tweet confirmation: {str(e)}")
+            
+            # Save a screenshot
+            screenshot_path = SCRIPT_DIR / "tweet_screenshot.png"
+            await page.screenshot(path=str(screenshot_path))
+            logger.info(f"Screenshot saved to {screenshot_path}")
+            
+            # Wait a moment before closing
+            logger.info("Waiting 3 seconds before closing browser...")
+            await page.wait_for_timeout(3000)
+            
+            # Close the browser
+            logger.info("Closing browser...")
+            await browser.close()
+            logger.info("Browser closed successfully")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error: {str(e)}")
+            # Ensure browser is closed even if there's an error
+            try:
+                if 'browser' in locals() and browser:
+                    await browser.close()
+                    logger.info("Browser closed after error")
+            except:
+                pass
+            return False
+
 if __name__ == "__main__":
     # If run directly, test with a sample URL and reply
     asyncio.run(post_reply_async(
         "https://x.com/example/status/123456789",
         "This is a test reply from the Twitter Reply Bot."
+    ))
+
+    # Test posting a standalone tweet
+    asyncio.run(post_tweet_async(
+        "This is a test tweet from the Twitter Bot."
     ))
