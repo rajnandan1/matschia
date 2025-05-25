@@ -37,7 +37,7 @@ Matschia is a modern web application that analyzes Twitter/X posts, identifies t
 1. **Clone the Repository**
 
     ```bash
-    git clone https://github.com/yourusername/matschia.git
+    git clone https://github.com/rajnandan1/matschia.git
     cd matschia
     ```
 
@@ -198,4 +198,4 @@ MIT License - See LICENSE file for details
 
 ---
 
-Created with ❤️ by [Your Name]
+Created with ❤️ by [Raj Nandan Sharma](https://github.com/rajnandan1)
