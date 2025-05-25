@@ -2,6 +2,12 @@
 
 Matschia is a modern web application that analyzes Twitter/X posts, identifies technology-related content, and generates engaging content (replies or standalone posts) in the style of popular tech influencers. It features a clean, shadcn-inspired UI built with Tailwind CSS.
 
+## Overview
+
+![Matschia Twitter Engagement Tool](static/ssm.png)
+
+*Screenshot of Matschia analyzing and generating content for Twitter/X engagement*
+
 ## Features
 
 ### Core Functionality
