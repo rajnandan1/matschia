@@ -24,6 +24,7 @@ state.json
 data.json
 analysis_results.json
 reply_screenshot.png
+tweet_screenshot.png
 
 # OS specific files
 .DS_Store

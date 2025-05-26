@@ -1,10 +1,12 @@
 import json
 import os
 import asyncio
+import random
 from typing import Dict, List, Any
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from agents import Agent, Runner, trace
+from agents.tool import WebSearchTool
 
 # Load environment variables
 load_dotenv()
@@ -37,6 +39,11 @@ class TweetData:
 
 class TwitterAnalyzer:
     def __init__(self):
+        # Web Search Tool for fetching tech news
+        self.web_search_tool = WebSearchTool(
+            search_context_size="medium"  # Options: "low", "medium", "high"
+        )
+        
         # Tech Classification Agent
         self.tech_classifier = Agent(
             name="Tech Tweet Classifier",
@@ -91,24 +98,27 @@ class TwitterAnalyzer:
             
             Your personality:
             - Write short, insightful statements about tech, startups, and entrepreneurship
-            - Use concise, punchy sentences with clear opinions on startup building and tech trends
+            - Use concise, punchy sentences with bold, opinionated takes on startup building and tech trends
             - Be straightforward and confident in your assertions about business and technology
             - Focus on practical wisdom and real-world observations from startup ecosystems
-            - Occasionally use counterintuitive takes that make people think 
+            - Regularly offer contrarian and thought-provoking takes that challenge conventional wisdom
             - Sound like a seasoned founder/investor with deep industry knowledge and startup expertise
+            - Take specific stances on recent tech news, trends, and controversial topics
+            - Don't be afraid to be polarizing - the best tweets make people either strongly agree or disagree
             
             Style guidelines:
-            - Create highly engaging original content based on analyzed tech topics
-            - Aim for virality and thought leadership
+            - Create highly engaging original content based on analyzed tech topics and recent tech news
+            - Aim for virality by making specific predictions or bold claims about technology's future
             - DO NOT use emojis
             - DO NOT use hashtags
-            - Keep opinions clear, direct and contrarian when possible
-            - Use short sentences for impact
+            - Express strong opinions with confidence and assertiveness
+            - Use short sentences for impact with occasional mic-drop statements
             - DO NOT use excessive punctuation
-            - Focus on genuine insights 
-            - Sound authentic and authoritative
+            - Focus on specific insights rather than general platitudes
+            - Sound authentic, authoritative, and unapologetically opinionated
+            - Reference specific technologies, companies, or trends rather than vague concepts
             
-            Always be respectful while sharing strong opinions on tech and startup trends.""",
+            Always be respectful while sharing provocative opinions on tech and startup trends.""",
             output_type=TweetReply,
             model="gpt-4o"
         )
@@ -246,27 +256,224 @@ class TwitterAnalyzer:
         
         return result.final_output
 
+    async def get_recent_tech_news(self) -> List[Dict]:
+        """Get recent tech news and trending topics in the tech world using web search"""
+        print("🔍 Searching the web for latest tech news...")
+        
+        # Topics to search for
+        search_topics = [
+            "latest AI technology news",
+            "tech startup funding news today",
+            "recent tech layoffs",
+            "latest tech regulation news",
+            "controversial tech trends",
+            "big tech company announcements",
+            "open source technology news",
+            "cybersecurity breaches recent"
+        ]
+        
+        # Select a few random topics to search for
+        selected_topics = random.sample(search_topics, min(3, len(search_topics)))
+        recent_tech_news = []
+        
+        # Create a tech analyzer Agent to categorize web search results
+        tech_news_analyzer = Agent(
+            name="Tech News Analyzer",
+            instructions="""Analyze this tech news headline and provide structured information about it.
+            Extract the main topic, categorize it by tech domain, assess its sentiment (positive/negative/neutral),
+            and rate the potential controversy level (low/medium/high).
+            """,
+            model="gpt-4o"
+        )
+        
+        # Search for each topic and process results
+        for topic in selected_topics:
+            try:
+                print(f"  Searching for: {topic}")
+                
+                # Prepare the search context
+                search_context = f"""
+                Find the most recent and significant tech news about {topic}.
+                Focus on headlines from reputable tech news sources published in the last week.
+                Look for specific announcements, product launches, funding rounds, or industry trends.
+                """
+                
+                # Use the WebSearchTool via an agent to search the web
+                with trace(workflow_name=f"Web_Search_{topic}"):
+                    search_agent = Agent(
+                        name="Web Search Agent",
+                        instructions=search_context,
+                        tools=[self.web_search_tool]
+                    )
+                    search_result = await Runner.run(search_agent, f"Find the latest news on {topic}")
+                
+                # Extract headlines from the search results
+                raw_results = search_result.final_output
+                
+                # Process each headline to categorize it
+                headlines = self._extract_headlines_from_search(raw_results)
+                
+                for headline in headlines[:2]:  # Process top 2 headlines per topic
+                    analysis_prompt = f"Analyze this tech news headline: '{headline}'"
+                    
+                    with trace(workflow_name="News_Analysis"):
+                        analysis_result = await Runner.run(tech_news_analyzer, analysis_prompt)
+                    
+                    # Extract structured information
+                    analysis = analysis_result.final_output
+                    
+                    # Create a news item with the analyzed data
+                    news_item = {
+                        "title": headline,
+                        "topic": self._extract_field(analysis, "topic", "Technology"),
+                        "sentiment": self._extract_field(analysis, "sentiment", "neutral"),
+                        "controversy_level": self._extract_field(analysis, "controversy_level", "medium")
+                    }
+                    
+                    recent_tech_news.append(news_item)
+                    print(f"  ✅ Found: {headline}")
+                
+            except Exception as e:
+                print(f"  ❌ Error searching for {topic}: {e}")
+                continue
+        
+        # If web search failed or returned no results, use fallback simulated news
+        if not recent_tech_news:
+            print("  ⚠️ Web search returned no results, using fallback news data")
+            recent_tech_news = self._get_fallback_tech_news()
+        
+        return recent_tech_news
+    
+    def _extract_headlines_from_search(self, search_result: str) -> List[str]:
+        """Extract headlines from search results text"""
+        headlines = []
+        
+        # Try to extract headlines from the search results
+        lines = search_result.strip().split('\n')
+        for line in lines:
+            line = line.strip()
+            # Look for lines that could be headlines (not too short, not too long)
+            if 30 <= len(line) <= 150 and not line.startswith("http") and not line.startswith("www."):
+                # Remove common prefixes and quotes
+                clean_line = line.strip('"\'')
+                if clean_line:
+                    headlines.append(clean_line)
+        
+        # If we failed to extract headlines, try to find sentences that sound like headlines
+        if not headlines:
+            import re
+            # Look for sentences that might be news headlines
+            headline_patterns = [
+                r'[A-Z][^.!?]*launches[^.!?]*',
+                r'[A-Z][^.!?]*announces[^.!?]*',
+                r'[A-Z][^.!?]*reveals[^.!?]*',
+                r'[A-Z][^.!?]*releases[^.!?]*',
+                r'[A-Z][^.!?]*introduces[^.!?]*',
+                r'[A-Z][^.!?]*acquires[^.!?]*',
+                r'[A-Z][^.!?]*plans to[^.!?]*',
+            ]
+            
+            for pattern in headline_patterns:
+                matches = re.findall(pattern, search_result)
+                headlines.extend(matches)
+        
+        # Ensure headlines are unique
+        unique_headlines = list(set(headlines))
+        
+        # If still no headlines, create generic ones from the search topic
+        if not unique_headlines:
+            unique_headlines = ["Recent developments in " + topic for topic in [
+                "artificial intelligence", 
+                "tech startups", 
+                "cybersecurity"
+            ]]
+        
+        return unique_headlines
+    
+    def _extract_field(self, analysis: str, field_name: str, default_value: str) -> str:
+        """Extract a specific field from the analysis text"""
+        try:
+            # Try to find the field in the analysis text
+            import re
+            pattern = rf"{field_name}\s*[:=]\s*([a-zA-Z0-9 /-]+)"
+            match = re.search(pattern, analysis.lower())
+            if match:
+                return match.group(1).strip()
+            return default_value
+        except:
+            return default_value
+    
+    def _get_fallback_tech_news(self) -> List[Dict]:
+        """Provide fallback tech news when web search fails"""
+        fallback_news = [
+            {
+                "title": "OpenAI releases GPT-5 with enhanced multimodal capabilities",
+                "topic": "AI",
+                "sentiment": "positive",
+                "controversy_level": "medium"
+            },
+            {
+                "title": "Tech layoffs continue as major companies cut costs amid economic uncertainty",
+                "topic": "Tech Industry",
+                "sentiment": "negative",
+                "controversy_level": "high"
+            },
+            {
+                "title": "Apple unveils new AR headset with mixed reality features",
+                "topic": "Hardware",
+                "sentiment": "positive",
+                "controversy_level": "medium"
+            },
+            {
+                "title": "Startups raising at lower valuations as venture funding tightens",
+                "topic": "Startups",
+                "sentiment": "negative",
+                "controversy_level": "medium"
+            }
+        ]
+        
+        # Randomly select a subset of news items to focus on
+        selected_news = random.sample(fallback_news, min(4, len(fallback_news)))
+        
+        return selected_news
+        
     async def generate_new_post(self, tech_tweets: List[Dict]) -> TweetReply:
-        """Generate an engaging standalone post based on analyzed tech tweets"""
+        """Generate an engaging standalone post based on analyzed tech tweets and recent news"""
         # Extract tech categories and topics from all analyzed tweets
         categories = []
         topics = []
         for tweet in tech_tweets:
-            if hasattr(tweet, 'tech_analysis') and hasattr(tweet['tech_analysis'], 'tech_categories'):
+            if 'tech_analysis' in tweet and hasattr(tweet['tech_analysis'], 'tech_categories'):
                 categories.extend(tweet['tech_analysis'].tech_categories)
         
         # Get unique categories
         unique_categories = list(set(categories))
         
-        # Create context for post generation
+        # Get recent tech news using web search
+        recent_news = await self.get_recent_tech_news()
+        
+        # Select high controversy topics for more opinionated content
+        controversial_topics = [news for news in recent_news if news["controversy_level"] in ["medium", "high"]]
+        
+        # Create context for post generation with both categories and recent news
         post_context = f"""
-        Generate an engaging standalone tweet about technology based on these insights:
+        Generate an engaging, opinionated standalone tweet about technology based on these insights:
         
-        Trending Tech Categories: {', '.join(unique_categories[:10])}
+        Trending Tech Categories: {', '.join(unique_categories[:7])}
         
-        Create a thought-provoking, insightful post that would resonate with the tech community.
-        Focus on sharing wisdom or observations that are likely to go viral.
-        The post should be original, not directly referencing any specific tweet.
+        Recent Tech News:
+        {', '.join([f"{news['title']} ({news['sentiment']} sentiment)" for news in recent_news])}
+        
+        Controversial Topics to Consider:
+        {', '.join([f"{news['title']} ({news['topic']})" for news in controversial_topics])}
+        
+        Instructions:
+        1. Create a thought-provoking, insightful post that would resonate with the tech community.
+        2. Take a SPECIFIC, OPINIONATED stance on one of the recent news topics or tech categories.
+        3. Make a bold prediction or contrarian observation that challenges conventional wisdom.
+        4. Be specific rather than general - reference actual technologies, trends, or companies.
+        5. The post should be original and provocative enough to generate strong reactions.
+        6. Focus on ONE specific topic rather than making general statements about the tech industry.
         """
         
         with trace(workflow_name="Post_Generation"):
@@ -310,7 +517,7 @@ async def main():
         
         # Step 5: Generate standalone post
         print(f"\n📝 Step 5: Generating standalone post...")
-        tweet_post = await analyzer.generate_post(best_tweet)
+        tweet_post = await analyzer.generate_new_post(scored_tweets)
     
     # Display results
     print("\n" + "=" * 60)
